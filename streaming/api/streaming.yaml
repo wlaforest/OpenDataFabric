@@ -1,0 +1,733 @@
+openapi: 3.0.0
+
+info:
+  title: Open Data Fabric Streaming API
+  version: 3.0.0
+
+servers:
+  - url: "{protocol}://{address}:{port}/"
+    variables:
+      address:
+        default: localhost
+        description: Address of the server
+      port:
+        default: "9077"
+        description: Port of the server
+      protocol:
+        default: http
+        description: Protocol for interacting with server
+        enum:
+          - http
+          - https
+
+paths:
+  /consumer-groups:
+    get:
+      summary: 'List Consumer Groups'
+      description: 'Returns the list of consumer groups for the Data Fabric'
+      tags:
+        - Consumer Group
+      responses:
+        '200':
+          $ref: '#/components/responses/ListConsumerGroupsResponse'
+
+  /consumer-groups/{consumer_group_id}:
+    parameters:
+      - $ref: '#/components/parameters/ConsumerGroupId'
+
+    get:
+      summary: 'Get Consumer Group'
+      description: 'Returns the consumer group specified by the ``consumer_group_id``.'
+      tags:
+        - Consumer Group
+      responses:
+        '200':
+          $ref: '#/components/responses/GetConsumerGroupResponse'
+
+  /consumer-groups/{consumer_group_id}/consumers:
+    parameters:
+      - $ref: '#/components/parameters/ConsumerGroupId'
+
+    get:
+      summary: 'List Consumers'
+      description: 'Returns a list of consumers that belong to the specified consumer group.'
+      tags:
+        - Consumer Group
+      responses:
+        '200':
+          $ref: '#/components/responses/ListConsumersResponse'
+
+  /consumer-groups/{consumer_group_id}/consumers/{consumer_id}:
+    parameters:
+      - $ref: '#/components/parameters/ConsumerGroupId'
+      - $ref: '#/components/parameters/ConsumerId'
+
+    get:
+      summary: 'Get Consumer'
+      description: 'Returns the consumer specified by the ``consumer_id``.'
+      tags:
+        - Consumer Group
+      responses:
+        '200':
+          $ref: '#/components/responses/GetConsumerResponse'
+
+  /consumer-groups/{consumer_group_id}/consumers/{consumer_id}/assignments:
+    parameters:
+      - $ref: '#/components/parameters/ConsumerGroupId'
+      - $ref: '#/components/parameters/ConsumerId'
+
+    get:
+      summary: 'List Consumer Assignments'
+      description: 'Returns a list of partition assignments for the specified consumer.'
+      tags:
+        - Consumer Group
+      responses:
+        '200':
+          $ref: '#/components/responses/ListConsumerAssignmentsResponse'
+
+  /consumer-groups/{consumer_group_id}/consumers/{consumer_id}/assignments/{topic_name}/partitions/{partition_id}:
+    parameters:
+      - $ref: '#/components/parameters/ConsumerGroupId'
+      - $ref: '#/components/parameters/ConsumerId'
+      - $ref: '#/components/parameters/TopicName'
+      - $ref: '#/components/parameters/PartitionId'
+
+    get:
+      summary: 'Get Consumer Assignment'
+      description: 'Returns information about the assignment for the specified consumer to the specified partition.'
+      tags:
+        - Consumer Group
+      responses:
+        '200':
+          $ref: '#/components/responses/GetConsumerAssignmentResponse'
+
+  /topics:
+    get:
+      summary: 'List Topics'
+      description: 'Returns the list of data stream topics.'
+      tags:
+        - Topic
+      responses:
+        '200':
+          $ref: '#/components/responses/ListTopicsResponse'
+
+  /topics/{topic_name}:
+    parameters:
+
+      - $ref: '#/components/parameters/TopicName'
+
+    get:
+      summary: 'Get Topic'
+      description: 'Returns the topic with the given `topic_name`.'
+      tags:
+        - Topic
+      responses:
+        '200':
+          $ref: '#/components/responses/GetTopicResponse'
+
+  /topics/{topic_name}/partitions:
+    parameters:
+
+      - $ref: '#/components/parameters/TopicName'
+
+    get:
+      summary: 'List Partitions'
+      description: 'Returns the list of partitions that belong to the specified topic.'
+      tags:
+        - Partition
+      responses:
+        '200':
+          $ref: '#/components/responses/ListPartitionsResponse'
+
+  /topics/{topic_name}/partitions/{partition_id}:
+    parameters:
+
+      - $ref: '#/components/parameters/TopicName'
+      - $ref: '#/components/parameters/PartitionId'
+
+    get:
+      summary: 'Get Partition'
+      description: 'Returns the partition with the given `partition_id`.'
+      tags:
+        - Partition
+      responses:
+        '200':
+          $ref: '#/components/responses/GetPartitionResponse'
+
+components:
+  parameters:
+    ConsumerGroupId:
+      name: 'consumer_group_id'
+      description: 'The consumer group ID.'
+      in: path
+      required: true
+      schema:
+        type: string
+      example: 'consumer-group-1'
+
+    ConsumerId:
+      name: 'consumer_id'
+      description: 'The consumer ID.'
+      in: path
+      required: true
+      schema:
+        type: string
+      example: 'consumer-1'
+
+    PartitionId:
+      name: 'partition_id'
+      description: 'The partition ID.'
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 1
+
+    TopicName:
+      name: 'topic_name'
+      description: 'The topic name.'
+      in: path
+      required: true
+      schema:
+        type: string
+      example: topic-1
+
+  schemas:
+    ConsumerAssignmentData:
+      allOf:
+        - $ref: '#/components/schemas/Resource'
+        - type: object
+          required:
+            - consumer_group_id
+            - consumer_id
+            - topic_name
+            - partition_id
+            - partition
+          properties:
+            consumer_group_id:
+              type: string
+            consumer_id:
+              type: string
+            topic_name:
+              type: string
+            partition_id:
+              type: integer
+            partition:
+              $ref: '#/components/schemas/Relationship'
+
+    ConsumerAssignmentDataList:
+      allOf:
+        - $ref: '#/components/schemas/ResourceCollection'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConsumerAssignmentData'
+
+    ConsumerData:
+      allOf:
+        - $ref: '#/components/schemas/Resource'
+        - type: object
+          required:
+            - consumer_group_id
+            - consumer_id
+            - client_id
+            - assignments
+          properties:
+            consumer_group_id:
+              type: string
+            consumer_id:
+              type: string
+            instance_id:
+              type: string
+              nullable: true
+            client_id:
+              type: string
+            assignments:
+              $ref: '#/components/schemas/Relationship'
+
+    ConsumerDataList:
+      allOf:
+        - $ref: '#/components/schemas/ResourceCollection'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConsumerData'
+
+    ConsumerGroupData:
+      allOf:
+        - $ref: '#/components/schemas/Resource'
+        - type: object
+          required:
+            - consumer_group_id
+            - is_simple
+            - partition_assignor
+            - state
+            - coordinator
+            - consumers
+          properties:
+            consumer_group_id:
+              type: string
+            is_simple:
+              type: boolean
+            partition_assignor:
+              type: string
+            state:
+              $ref: '#/components/schemas/ConsumerGroupState'
+            coordinator:
+              $ref: '#/components/schemas/Relationship'
+            consumer:
+              $ref: '#/components/schemas/Relationship'
+
+    ConsumerGroupDataList:
+      allOf:
+        - $ref: '#/components/schemas/ResourceCollection'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConsumerGroupData'
+
+    ConsumerGroupState:
+      type: string
+      enum:
+        - UNKNOWN
+        - PREPARING_REBALANCE
+        - COMPLETING_REBALANCE
+        - STABLE
+        - DEAD
+        - EMPTY
+
+    PartitionData:
+      allOf:
+        - $ref: '#/components/schemas/Resource'
+        - type: object
+          required:
+            - topic_name
+            - partition_id
+            - reassignment
+          properties:
+            topic_name:
+              type: string
+            partition_id:
+              type: integer
+            leader:
+              $ref: '#/components/schemas/Relationship'
+            reassignment:
+              $ref: '#/components/schemas/Relationship'
+
+    PartitionDataList:
+      allOf:
+        - $ref: '#/components/schemas/ResourceCollection'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/PartitionData'
+
+    Relationship:
+      type: object
+      required:
+        - related
+      properties:
+        related:
+          type: string
+
+    Resource:
+      type: object
+      required:
+        - kind
+        - metadata
+      properties:
+        kind:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResourceMetadata'
+
+    ResourceCollection:
+      type: object
+      required:
+        - kind
+        - metadata
+      properties:
+        kind:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResourceCollectionMetadata'
+
+    ResourceCollectionMetadata:
+      type: object
+      required:
+        - self
+      properties:
+        self:
+          type: string
+        next:
+          type: string
+          nullable: true
+
+    ResourceMetadata:
+      type: object
+      required:
+        - self
+      properties:
+        self:
+          type: string
+        resource_name:
+          type: string
+          nullable: true
+
+    TopicData:
+      allOf:
+        - $ref: '#/components/schemas/Resource'
+        - type: object
+          required:
+            - topic_name
+            - partitions
+            - partition_reassignments
+          properties:
+            topic_name:
+              type: string
+            partitions:
+              $ref: '#/components/schemas/Relationship'
+            partition_reassignments:
+              $ref: '#/components/schemas/Relationship'
+
+    TopicDataList:
+      allOf:
+        - $ref: '#/components/schemas/ResourceCollection'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TopicData'
+                
+  responses:
+    GetConsumerAssignmentResponse:
+      description: 'The consumer group assignment.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsumerAssignmentData'
+          example:
+            kind: 'ConsumerAssignment'
+            metadata:
+              self: 'http://localhost:9391/v1/consumer-groups/consumer-group-1/consumers/consumer-1/assignments/topic-1/partitions/1'
+              resource_name: 'crn:///consumer-group=consumer-group-1/consumer=consumer-1/assignment=topic=1/partition=1'
+            consumer_group_id: 'consumer-group-1'
+            consumer_id: 'consumer-1'
+            topic_name: 'topic-1'
+            partition_id: 1
+            partition:
+              related: 'http://localhost:9391/v1/topics/topic-1/partitions/1'
+
+    GetConsumerGroupResponse:
+      description: 'The consumer group.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsumerGroupData'
+          example:
+            kind: 'ConsumerGroup'
+            metadata:
+              self: 'http://localhost:9391/v1/consumer-groups/consumer-group-1'
+              resource_name: 'crn:///consumer-group=consumer-group-1'
+            consumer_group_id: 'consumer-group-1'
+            is_simple: false
+            partition_assignor: 'RoundRobinAssignor'
+            state: 'STABLE'
+            coordinator:
+              related: 'http://localhost:9391/v1/1'
+            consumers:
+              related: 'http://localhost:9391/v1/consumer-groups/consumer-group-1/consumers'
+
+    GetConsumerResponse:
+      description: 'The consumer.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsumerData'
+          example:
+            kind: 'Consumer'
+            metadata:
+              self: 'http://localhost:9391/v1/consumer-groups/consumer-group-1/consumers/consumer-1'
+              resource_name: 'crn:///consumer-group=consumer-group-1/consumer=consumer-1'
+            consumer_group_id: 'consumer-group-1'
+            consumer_id: 'consumer-1'
+            instance_id: 'consumer-instance-1'
+            client_id: 'client-1'
+            assignments:
+              related: 'http://localhost:9391/v1/consumer-groups/consumer-group-1/consumers/consumer-1/assignments'
+
+    GetPartitionResponse:
+      description: 'The partition'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PartitionData'
+          example:
+            kind: 'Partition'
+            metadata:
+              self: 'http://localhost:9391/v3/topics/topic-1/partitions/1'
+              resource_name: 'crn:///topic=topic-1/partition=1'
+            topic_name: 'topic-1'
+            partition_id: 1
+            reassignment:
+              related: 'http://localhost:9391/v1/topics/topic-1/partitions/1/reassignment'
+
+    GetTopicResponse:
+      description: 'The topic.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TopicData'
+          example:
+            kind: 'Topic'
+            metadata:
+              self: 'http://localhost:9391/v1/topics/topic-1'
+              resource_name: 'crn:///topic=topic-1'
+            topic_name: 'topic-1'
+            is_internal: false
+            partitions:
+              related: 'http://localhost:9391/topics/topic-1/partitions'
+            configs:
+              related: 'http://localhost:9391/topics/topic-1/configs'
+            partition_reassignments:
+              related: 'http://localhost:9391/topics/topic-1/partitions/-/reassignments'
+
+    ListConsumerAssignmentsResponse:
+      description: 'The list of consumer group assignments.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsumerAssignmentDataList'
+          example:
+            kind: 'ConsumerAssignmentList'
+            metadata:
+              self: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-1/assignments'
+              next: null
+            data:
+              - kind: 'ConsumerAssignment'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-1/assignments/topic-1/partitions/1'
+                  resource_name: 'crn:///consumer-group=consumer-group-1/consumer=consumer-1/assignment=topic=1/partition=1'
+                consumer_group_id: 'consumer-group-1'
+                consumer_id: 'consumer-1'
+                topic_name: 'topic-1'
+                partition_id: 1
+                partition:
+                  related: 'http://localhost:9391/topics/topic-1/partitions/1'
+              - kind: 'ConsumerAssignment'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-1/assignments/topic-2/partitions/2'
+                  resource_name: 'crn:///consumer-group=consumer-group-1/consumer=consumer-1/assignment=topic=2/partition=2'
+                consumer_group_id: 'consumer-group-1'
+                consumer_id: 'consumer-1'
+                topic_name: 'topic-2'
+                partition_id: 2
+                partition:
+                  related: 'http://localhost:9391/topics/topic-2/partitions/2'
+              - kind: 'ConsumerAssignment'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-1/assignments/topic-3/partitions/3'
+                  resource_name: 'crn:///consumer-group=consumer-group-1/consumer=consumer-1/assignment=topic=3/partition=3'
+                consumer_group_id: 'consumer-group-1'
+                consumer_id: 'consumer-1'
+                topic_name: 'topic-3'
+                partition_id: 3
+                partition:
+                  related: 'http://localhost:9391/topics/topic-3/partitions/3'
+
+    ListConsumerGroupsResponse:
+      description: 'The list of consumer groups.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsumerGroupDataList'
+          example:
+            kind: 'ConsumerGroupList'
+            metadata:
+              self: 'http://localhost:9391/consumer-groups'
+              next: null
+            data:
+              - kind: 'ConsumerGroup'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-1'
+                  resource_name: 'crn:///consumer-group=consumer-group-1'
+                consumer_group_id: 'consumer-group-1'
+                is_simple: false
+                partition_assignor: 'RoundRobinAssignor'
+                state: 'STABLE'
+                coordinator:
+                  related: 'http://localhost:9391/brokers/1'
+                consumers:
+                  related: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers'
+              - kind: 'ConsumerGroup'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-2'
+                  resource_name: 'crn:///consumer-group=consumer-group-2'
+                consumer_group_id: 'consumer-group-2'
+                is_simple: false
+                partition_assignor: 'StickyAssignor'
+                state: 'PREPARING_REBALANCE'
+                coordinator:
+                  related: 'http://localhost:9391/brokers/2'
+                consumers:
+                  related: 'http://localhost:9391/consumer-groups/consumer-group-2/consumers'
+              - kind: 'ConsumerGroup'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-3'
+                  resource_name: 'crn:///consumer-group=consumer-group-3'
+                consumer_group_id: 'consumer-group-3'
+                is_simple: false
+                partition_assignor: 'RangeAssignor'
+                state: 'DEAD'
+                coordinator:
+                  related: 'http://localhost:9391/brokers/3'
+                consumers:
+                  related: 'http://localhost:9391/consumer-groups/consumer-group-3/consumers'
+
+    ListConsumersResponse:
+      description: 'The list of consumers.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsumerDataList'
+          example:
+            kind: 'ConsumerList'
+            metadata:
+              self: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers'
+              next: null
+            data:
+              - kind: 'Consumer'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-1'
+                  resource_name: 'crn:///consumer-group=consumer-group-1/consumer=consumer-1'
+                consumer_group_id: 'consumer-group-1'
+                consumer_id: 'consumer-1'
+                instance_id: 'consumer-instance-1'
+                client_id: 'client-1'
+                assignments:
+                  related: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-1/assignments'
+              - kind: 'Consumer'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-2'
+                  resource_name: 'crn:///consumer-group=consumer-group-1/consumer=consumer-2'
+                consumer_group_id: 'consumer-group-1'
+                consumer_id: 'consumer-2'
+                instance_id: 'consumer-instance-2'
+                client_id: 'client-2'
+                assignments:
+                  related: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-2/assignments'
+              - kind: 'Consumer'
+                metadata:
+                  self: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-2'
+                  resource_name: 'crn:///consumer-group=consumer-group-1/consumer=consumer-2'
+                consumer_group_id: 'consumer-group-1'
+                consumer_id: 'consumer-2'
+                instance_id: 'consumer-instance-2'
+                client_id: 'client-2'
+                assignments:
+                  related: 'http://localhost:9391/consumer-groups/consumer-group-1/consumers/consumer-2/assignments'
+
+    ListPartitionsResponse:
+      description: 'The list of partitions.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PartitionDataList'
+          example:
+            kind: 'PartitionList'
+            metadata:
+              self: 'http://localhost:9391/topics/topic-1/partitions'
+              next: null
+            data:
+              - kind: 'Partition'
+                metadata:
+                  self: 'http://localhost:9391/topics/topic-1/partitions/1'
+                  resource_name: 'crn:///topic=topic-1/partition=1'
+                topic_name: 'topic-1'
+                partition_id: 1
+                reassignment:
+                  related: 'http://localhost:9391/topics/topic-1/partitions/1/reassignment'
+              - kind: 'Partition'
+                metadata:
+                  self: 'http://localhost:9391/topics/topic-1/partitions/2'
+                  resource_name: 'crn:///topic=topic-1/partition=2'
+                topic_name: 'topic-1'
+                partition_id: 2
+                reassignment:
+                  related: 'http://localhost:9391/topics/topic-1/partitions/2/reassignment'
+              - kind: 'Partition'
+                metadata:
+                  self: 'http://localhost:9391/topics/topic-1/partitions/3'
+                  resource_name: 'crn:///topic=topic-1/partition=3'
+                topic_name: 'topic-1'
+                partition_id: 3
+                reassignment:
+                  related: 'http://localhost:9391/topics/topic-1/partitions/3/reassignment'
+
+    ListTopicsResponse:
+      description: 'The list of topics.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TopicDataList'
+          example:
+            kind: 'TopicList'
+            metadata:
+              self: 'http://localhost:9391/topics'
+              next: null
+            data:
+              - kind: 'Topic'
+                metadata:
+                  self: 'http://localhost:9391/topics/topic-1'
+                  resource_name: 'crn:///topic=topic-1'
+                topic_name: 'topic-1'
+                is_internal: false
+                partitions:
+                  related: 'http://localhost:9391/topics/topic-1/partitions'
+                configs:
+                  related: 'http://localhost:9391/topics/topic-1/configs'
+                partition_reassignments:
+                  related: 'http://localhost:9391/topics/topic-1/partitions/-/reassignments'
+              - kind: 'Topic'
+                metadata:
+                  self: 'http://localhost:9391/topics/topic-2'
+                  resource_name: 'crn:///topic=topic-2'
+                topic_name: 'topic-2'
+                is_internal: true
+                partitions:
+                  related: 'http://localhost:9391/topics/topic-2/partitions'
+                configs:
+                  related: 'http://localhost:9391/topics/topic-2/configs'
+                partition_reassignments:
+                  related: 'http://localhost:9391/topics/topic-2/partitions/-/reassignments'
+              - kind: 'Topic'
+                metadata:
+                  self: 'http://localhost:9391/topics/topic-3'
+                  resource_name: 'crn:///topic=topic-3'
+                topic_name: 'topic-3'
+                is_internal: false
+                partitions:
+                  related: 'http://localhost:9391/topics/topic-3/partitions'
+                configs:
+                  related: 'http://localhost:9391/topics/topic-3/configs'
+                partition_reassignments:
+                  related: 'http://localhost:9391/topics/topic-3/partitions/-/reassignments'
